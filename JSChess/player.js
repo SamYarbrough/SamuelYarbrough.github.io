@@ -1,8 +1,14 @@
 var color_scheme = "standard";
 var color_scheme = "green_and_white";
 
-var c = document.getElementById("board");
-var ctx = c.getContext("2d");
+var canvas = document.getElementById("board");
+var ctx = canvas.getContext("2d");
+
+var mouseX = 0;
+var mouseY = 0;
+
+var boardIndexX = 0;
+var boardIndexY = 0;
 
 const letters = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
@@ -13,15 +19,35 @@ var positions = [02, 03, 04, 05, 06, 04, 03, 02,
                  00, 00, 00, 00, 00, 00, 00, 00, 
                  00, 00, 00, 00, 00, 00, 00, 00, 
                  11, 11, 11, 11, 11, 11, 11, 11, 
-                 12, 13, 14, 15, 16, 14, 13, 12]
+                 12, 13, 14, 15, 16, 14, 13, 12];
 
-/*function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-        x: evt.clientX - rect.left,
-        y: evt.clientY - rect.top;
-    }
-}*/
+function yellowGradient(grd) {
+    grd.addColorStop(0, "yellow");
+    grd.addColorStop(1, "rgba(255, 255, 0, 0)");
+    return grd;
+}
+
+function glowOutline(indx, indy) {
+    // Create gradient
+    var tpx = indx*75+25;
+    var tpy = indy*75+25;
+
+    var grd = ctx.createLinearGradient(tpx, 0, tpx+10, 0);
+    grd = yellowGradient(grd); ctx.fillStyle = grd;
+    ctx.fillRect(tpx, tpy, 10, 75);
+
+    var grd = ctx.createLinearGradient(0, tpy, 0, tpy+10);
+    grd = yellowGradient(grd); ctx.fillStyle = grd;
+    ctx.fillRect(tpx, tpy, 75, 10);
+
+    var grd = ctx.createLinearGradient(tpx+75, 0, tpx+75-10, 0);
+    grd = yellowGradient(grd); ctx.fillStyle = grd;
+    ctx.fillRect(tpx+75-10, tpy, 10, 75);
+
+    var grd = ctx.createLinearGradient(0, tpy+75, 0, tpy+75-10);
+    grd = yellowGradient(grd); ctx.fillStyle = grd;
+    ctx.fillRect(tpx, tpy+75-10, 75, 10);
+}
 
 function checkers(x, y) {
     var xeven = (Math.floor(x/2.0)==x/2.0)?0:1;
@@ -107,6 +133,28 @@ function setupPieces() {
     }
 }
 
-refreshBoard();
-labelRowsColumns();
-setupPieces();
+function completeReset() {
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    refreshBoard();
+    labelRowsColumns();
+    setupPieces();
+}
+
+canvas.addEventListener("mousemove", function(e) { 
+    var cRect = canvas.getBoundingClientRect();
+    mouseX = Math.round(e.clientX - cRect.left);
+    mouseY = Math.round(e.clientY - cRect.top);
+    var tempx = Math.floor((mouseX-25)/75);
+    var tempy = Math.floor((mouseY-25)/75);
+    if (tempx != boardIndexX || tempy != boardIndexY) {
+        boardIndexX = tempx;
+        boardIndexY = tempy;
+        completeReset();
+        if (tempx>=0&&tempx<8&&tempy>=0&&tempy<8) {
+            glowOutline(tempx, tempy);
+        }
+    }
+});
+
+completeReset();
